@@ -233,26 +233,32 @@ inline Intersection Triangle::getIntersection(Ray ray)
 {
     Intersection inter;
 
-    if (dotProduct(ray.direction, normal) > 0)
+    if (dotProduct(ray.direction, normal) > 0)  //ray的方向应该是以着色点为终点。
         return inter;
     double u, v, t_tmp = 0;
-    Vector3f pvec = crossProduct(ray.direction, e2);
-    double det = dotProduct(e1, pvec);
+    Vector3f pvec = crossProduct(ray.direction, e2);    //s1, 注意顺序
+    double det = dotProduct(e1, pvec);                  //s1 dot e1
     if (fabs(det) < EPSILON)
         return inter;
 
     double det_inv = 1. / det;
-    Vector3f tvec = ray.origin - v0;
-    u = dotProduct(tvec, pvec) * det_inv;
+    Vector3f tvec = ray.origin - v0;                    //s， 注意顺序
+    u = dotProduct(tvec, pvec) * det_inv;               //b1
     if (u < 0 || u > 1)
         return inter;
-    Vector3f qvec = crossProduct(tvec, e1);
-    v = dotProduct(ray.direction, qvec) * det_inv;
+    Vector3f qvec = crossProduct(tvec, e1);             //s2, 注意顺序
+    v = dotProduct(ray.direction, qvec) * det_inv;      //b2
     if (v < 0 || u + v > 1)
         return inter;
-    t_tmp = dotProduct(e2, qvec) * det_inv;
+    t_tmp = dotProduct(e2, qvec) * det_inv;             //t
 
     // TODO find ray triangle intersection
+    inter.coords = ray(t_tmp);
+    inter.happened = true;
+    inter.distance = t_tmp;
+    inter.m = m;
+    inter.normal = normal;
+    inter.obj = this;
 
     return inter;
 }

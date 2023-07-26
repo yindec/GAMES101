@@ -61,4 +61,46 @@ bool Scene::trace(
 Vector3f Scene::castRay(const Ray &ray, int depth) const
 {
     // TO DO Implement Path Tracing Algorithm here
+    Intersection inter = intersect(ray);
+
+    if(!inter.happened)
+        return Vector3f(0, 0, 0);
+
+    if(inter.m->hasEmission()){
+        if(depth == 0)
+            return inter.m->hasEmission();
+        else
+            return Vector3f(0, 0, 0);
+    }
+
+    Vector3f L_dir(0, 0, 0);
+    Vector3f L_indir(0, 0, 0);
+
+    //direct
+    // 随机 sample 灯光，用该 sample 的结果判断射线是否击中光源
+    Intersection light_sample;
+    float pdf;
+    sampleLight(light_sample, pdf);
+    Vector3f obj_point_light = normalize(light_sample.coords - inter.coords);
+
+    Intersection inter_light = intersect(Ray(inter.coords, obj_point_light));
+    if(inter_light.happened && (inter_light.coords - light_sample.coords).norm() < 1e-2){
+        Vector3f f_r = inter.m->eval(ray.direction, obj_point_light, inter.normal);     //BRDF
+
+        L_dir = light_sample.emit * f_r * dotProduct(obj_point_light, inter.normal) * dotProduct(-obj_point_light, light_sample.normal)
+            / dotProduct(light_sample.coords - inter.coords, light_sample.coords - inter.coords) / pdf;
+    }
+
+    //indirect
+    if(get_random_float() < RussianRoulette){
+        Vector3f nextDir = inter.m->sample(obj_point_light, inter.normal);
+        float pdf_indirct = inter.m->pdf(ray.direction, nextDir, inter.normal);
+        Vector3f f_r = inter.m->eval(ray.direction, nextDir, inter.normal);
+
+        L_indir = castRay(Ray(inter.coords, nextDir), depth + 1)
+            * f_r * dotProduct(nextDir, inter.normal) / pdf_indirct / RussianRoulette;
+    }
+
+    return L_dir + L_indir;
+    
 }
