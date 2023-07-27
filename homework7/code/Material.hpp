@@ -49,6 +49,8 @@ private:
     // \param ior is the material refractive index
     //
     // \param[out] kr is the amount of light reflected
+
+    /*  //完整的菲涅尔方程，fresnel equation
     void fresnel(const Vector3f &I, const Vector3f &N, const float &ior, float &kr) const
     {
         float cosi = clamp(-1, 1, dotProduct(I, N));
@@ -70,6 +72,14 @@ private:
         // As a consequence of the conservation of energy, transmittance is given by:
         // kt = 1 - kr;
     }
+    */
+
+    //简化版菲涅尔方程， simplified fresnel equation
+    float fresnelSchlick(const float &n1, Vector3f L, Vector3f H){
+        float R0 = pow((n1-1)/(n1+1), 2);
+        return R0 + (1.0 - R0) * pow(1.0 - std::max(dotProduct(L, H), 0.0f), 5);
+    }
+
 
     Vector3f toWorld(const Vector3f &a, const Vector3f &N){
         Vector3f B, C;
@@ -251,7 +261,8 @@ Vector3f Material::eval(const Vector3f &wi, const Vector3f &wo, const Vector3f &
                 // 计算 fresnel 系数: F
                 float F;
                 float etat = 1.85;
-                fresnel(wi, N, etat, F);
+                //fresnel(wi, N, etat, F);
+                F = fresnelSchlick(etat, L, H);
 
                 Vector3f nominator = D * G * F;
                 float denominator = 4 * std::max(dotProduct(N, V), 0.0f) * std::max(dotProduct(N, L), 0.0f);
