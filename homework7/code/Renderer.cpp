@@ -27,7 +27,7 @@ void Renderer::Render(const Scene& scene)
 
     // change the spp value to change sample ammount
     // spp： sample per pixel
-    int spp = 4;       //初始值 16
+    int spp = 64;       //初始值 16
     std::cout << "SPP: " << spp << "\n";
     const int n = 24;
     std::thread th[n]; //24线程，再大了也没用，受硬件限制
